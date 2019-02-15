@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<version>1.0.0</version>
+	<groupId>com.locoslab</groupId>
+	<artifactId>wildfly-mariadb-patcher</artifactId>
+	<packaging>pom</packaging>
+
+	<name>WildFly Patch Generator for MariaDB</name>
+	<description>Creates a patch for a WildFly server that adds the JDBC driver for MariaDB as a base layer module.</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<wildfly.version>15.0.1.Final</wildfly.version>
+		<mariadb.version>2.4.0</mariadb.version>
+		<wildfly.original>${project.build.directory}/original/wildfly-${wildfly.version}</wildfly.original>
+		<wildfly.patched>${project.build.directory}/patched/wildfly-${wildfly.version}</wildfly.patched>
+		<patch.file>${project.build.directory}/wildfly-${wildfly.version}-mariadb-${mariadb.version}-patch.zip</patch.file>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<!-- fetch and unpack wildfly in two folders -->
+					<execution>
+						<id>fetch-wildfly</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.wildfly</groupId>
+									<artifactId>wildfly-dist</artifactId>
+									<version>${wildfly.version}</version>
+									<type>tar.gz</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${project.build.directory}/original</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.wildfly</groupId>
+									<artifactId>wildfly-dist</artifactId>
+									<version>${wildfly.version}</version>
+									<type>tar.gz</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${project.build.directory}/patched</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- fetch mariadb and put in patched version -->
+						<id>fetch-mariadb</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.mariadb.jdbc</groupId>
+									<artifactId>mariadb-java-client</artifactId>
+									<version>${mariadb.version}</version>
+									<overWrite>false</overWrite>
+									<outputDirectory>${wildfly.patched}/modules/system/layers/base/org/mariadb/jdbc/main</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<!-- copy module descriptor and set version -->
+						<id>filter-module-descriptor</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${wildfly.patched}/modules/system/layers/base/</outputDirectory>
+							<resources>
+								<resource>
+									<directory>modules</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- copy patch file and set versions -->
+                        <id>filter-patch-descriptor</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>patch</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jboss.as</groupId>
+				<artifactId>patch-gen-maven-plugin</artifactId>
+				<version>2.0.1.Final</version>
+				<executions>
+					<execution>
+						<id>build-patch-file</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>generate-patch</goal>
+						</goals>
+						<configuration>
+							<appliesToDist>${wildfly.original}</appliesToDist>
+							<updatedDist>${wildfly.patched}</updatedDist>
+							<patchConfig>${project.build.directory}/patch.xml</patchConfig>
+							<outputFile>${patch.file}</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

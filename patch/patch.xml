@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<patch-config xmlns="urn:jboss:patch-config:1.0">
+    <name>wildfly-${wildfly.version}-mariadb-${mariadb.version}</name>
+    <description>Adds the MariaDB JDBC driver ${mariadb.version} to a WildFly ${wildfly.version} server.</description>
+    <element patch-id="wildfly-${wildfly.version}-mariadb-${mariadb.version}">
+        <one-off name="base" />
+        <description>Adds the MariaDB JDBC driver ${mariadb.version} to a WildFly ${wildfly.version} server.</description>
+        <specified-content>
+            <modules>
+                <added name="org.mariadb.jdbc" />
+            </modules>
+        </specified-content>
+    </element>
+    <specified-content/>
+</patch-config>
