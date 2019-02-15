@@ -14,7 +14,7 @@ Be aware that building the patch will download WildFly into your local Maven rep
 
 ## Installation
 
-Apply the generated patch file (`target/wildfly-${wildfly.version}-mariadb-${mariadb.version}.zip`) to your host(s) using the management web-interface of a standalone server or domain (see the patching section) or using the command line interface (`bin/jboss-cli`). For the latter, you would use the following commands:
+Apply the generated patch file (`target/wildfly-${wildfly.version}-mariadb-${mariadb.version}-patch.zip`) to your host(s) using the management web-interface of a standalone server or domain (see the patching section) or using the command line interface (`bin/jboss-cli`). For the latter, you would use the following commands:
 
 ~~~
 connect <management-interface>	                        (e.g. connect http-remoting://localhost:9990)
