@@ -10,7 +10,7 @@ Set the WildFly and MariaDB version using the `wildfly.version` and `mariadb.ver
 mvn clean package
 ~~~
 
-Be aware that building the patch will download WildFly into your local Maven repository and it will unpack two instances of WildFly in the build folder. So make sure that you have enough free space on your disk.
+Be aware that building the patch will download WildFly into your local Maven repository and it will unpack two instances of WildFly in the build folder. So make sure that you have enough free space on your disk. If you get build errors, try downgrading your Java Virtual Machine to version 1.8.
 
 ## Installation
 
