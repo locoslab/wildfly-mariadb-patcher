@@ -23,26 +23,29 @@ patch apply <path-to-file-on-disk> --host=<host-name>   (e.g. patch apply /opt/p
 
 After patching, you will find the patch with some more meta data in the `.installation` folder. Don't forget to restart the patched host(s). 
 
+If you are patching a stopped standalone server, you can simply chdir to the root of the installation directory and run the following (quotation marks are intentional):
+
+~~~
+./bin/jboss-cli.sh "patch apply <path-to-file-on-disk>"
+~~~
+
 ## Usage
 
 To use the JDBC driver, it must be added to the datasources subsystem in `standalone.xml` or `domain.xml`.  
 
 ~~~
-<subsystem xmlns="urn:jboss:domain:datasources:5.0">
+ <subsystem xmlns="urn:jboss:domain:datasources:7.1">
     <datasources>
-        <datasource jndi-name="java:jboss/datasources/mysqldb" pool-name="mysqldb">
-            <connection-url>jdbc:mysql://localhost:3306/mysqldb</connection-url>
-            <driver>mysql</driver>
-            <security>
-                <user-name>admin</user-name>
-                <password>password</password>
-            </security>
+        <datasource jndi-name="java:/mydatabase" pool-name="mydatabasedb" enabled="true" use-java-context="true">
+            <connection-url>jdbc:mariadb://localhost:3306/mydatabase</connection-url>
+            <driver>mariadb</driver>
+            <security user-name="myusername" password="mypassword" />
         </datasource>
         <drivers>
             <driver name="h2" module="com.h2database.h2">
                 <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
             </driver>
-            <driver name="mysql" module="org.mariadb.jdbc" />
+            <driver name="mariadb" module="org.mariadb.jdbc"/>
         </drivers>
     </datasources>
 </subsystem>
@@ -50,12 +53,8 @@ To use the JDBC driver, it must be added to the datasources subsystem in `standa
 
 ## Issues
 
-When trying to use the patch on a WildFly 15.0.1.Final, I ran into several issues. My understanding of modules in WildFly and JDBC is not thorough enough to explain the underlying problems with certainty. I presume that module name must match the name given in the jar's manifest and that the jar actually contains several JDBC drivers for different API versions. In any case, here are my observations of spending a couple of hours "debugging":
+Version 2.1.3.Final of the patch-gen Maven plugin (https://github.com/jbossas/patch-gen) does not (yet) support Wildfly 30.0.0.Final. I assume it will be patched soon. For the time being, you can get a copy from the patch-gen fork at https://github.com/locosmac/patch-gen and run mvn clean install to create a local 2.1.4.Final-SNAPSHOT patch-gen Maven plugin that works (for me).
 
- * Building this project with a different module name than `org.mariadb.jdbc` results in module loading errors. 
- * Using a different name for the driver than `mysql` results in module loading errors. When defining a datasource via the jboss-cli, the error description actually says that the driver calls itself mysql and thus, changing its name is not valid.
- * Explicitly specifiying the `driver-class` (e.g. `org.mariadb.jdbc.Driver`) results in module loading errors. Luckily, the driver is auto-detected properly, if the driver or xa datasource class is not specified at all.
- 
 ## Attribution
 
  The build logic is based on this very educating [example from hibernate](https://github.com/hibernate/hibernate-demos/tree/master/other/wildfly-patch-creation) that creates a WildFly patch for some other module.
